@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: PHP ${{ matrix.php }} ${{ matrix.ts }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+        php: ['8.4', '8.5']
+        ts: [nts, zts]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          tools: composer
+        env:
+          phpts: ${{ matrix.ts == 'zts' && 'ts' || 'nts' }}
+
+      - name: PulseAudio
+        # sokol-audio's Linux backend. A headless server with a null sink gives the suite a real
+        # audio thread without a sound card.
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpulse-dev pulseaudio
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=ci
+          pactl set-default-sink ci
+
+      - name: Build
+        # sokol_audio.h is vendored under lib/sokol/ and compiled into the module.
+        run: |
+          phpize
+          ./configure --enable-sokol-audio
+          make -j"$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
+
+      - name: Load
+        run: |
+          php -n -d extension="$PWD/modules/sokol_audio.so" -r 'exit(extension_loaded("sokol_audio") ? 0 : 1);'
+          php -n -d extension="$PWD/modules/sokol_audio.so" --ri sokol_audio
+
+      - name: Test
+        # The lifecycle tests spawn child PHP processes, so the module is enabled through an extra
+        # ini scan directory that every process inherits rather than a -d flag only the parent sees.
+        # Tests that need an output device skip where sokol-audio cannot open one.
+        run: |
+          composer install --no-interaction --no-progress
+          mkdir -p "$RUNNER_TEMP/php-ini"
+          echo "extension=$PWD/modules/sokol_audio.so" > "$RUNNER_TEMP/php-ini/sokol_audio.ini"
+          PHP_INI_SCAN_DIR=":$RUNNER_TEMP/php-ini" php -d memory_limit=128M vendor/bin/pest --ci
+
+      - name: Test the audio thread logger
+        # Kills the PulseAudio server, so it runs last and alone.
+        if: runner.os == 'Linux'
+        run: |
+          SAUDIO_TEST_KILL_PULSE=1 PHP_INI_SCAN_DIR=":$RUNNER_TEMP/php-ini" php -d memory_limit=128M vendor/bin/pest --ci --filter 'audio thread log'

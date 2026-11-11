@@ -1,0 +1,51 @@
+{
+    "name": "php-io-extensions/sokol-audio",
+    "type": "php-ext",
+    "description": "1:1 PHP bindings of sokol_audio.h (floooh/sokol), with the library compiled into the extension",
+    "keywords": [
+        "sokol",
+        "audio",
+        "sokol-audio",
+        "php-ext"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Project Saturn Studios, LLC",
+            "email": "info@projectsaturnstudios.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.4"
+    },
+    "require-dev": {
+        "pestphp/pest": "^4.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.11.x-dev"
+        }
+    },
+    "php-ext": {
+        "extension-name": "sokol_audio",
+        "priority": 30,
+        "support-zts": true,
+        "support-nts": true,
+        "os-families": [
+            "linux",
+            "darwin"
+        ],
+        "configure-options": [
+            {
+                "name": "enable-sokol-audio",
+                "description": "Enable the sokol_audio.h bindings",
+                "needs-value": false
+            }
+        ]
+    }
+}

@@ -1,0 +1,14 @@
+# Agent guidance — php-io-extensions/sokol-audio
+
+1. **Read [`.okf/index.md`](.okf/index.md) first** before changing the API, the C, or packaging. Open only the concepts the change touches.
+2. **Bindings are 1:1 at floooh/sokol commit `93aa187b5d387cc24b7290b3ca3f13f61e139e7c`** (sokol has no release tags). Function, struct, enum and constant names are the C names. No defaults, no composites. The stub lists every translation; there are no others.
+3. **Upstream is copied unchanged** into `lib/sokol/` (`sokol_audio.h`, `LICENSE`). Never edit it. `src/sokol_audio_impl.c` is the only file that compiles the implementation, configured only through upstream's knobs (`SOKOL_ASSERT`, `SOKOL_DEBUG`). A newer sokol only from a later upstream commit: replace `lib/sokol/`, diff the public section, update the stub, binding C and tests, bump `PHP_SOKOL_AUDIO_UPSTREAM_COMMIT` and the version.
+4. **Structs** are `final` classes with one typed property per C field in field order; nested structs are created fresh, `clone` copies them. `float*` sample buffers are strings of packed floats. `void*` user data is `mixed`. Allocator functions must be `null`.
+5. **Guards run before sokol**: set up, owner thread, not forked, not inside a callback (setup/shutdown), sizes that would assert or overflow. `SOKOL_ASSERT` failures become `saudio_assertion_error` after the call; sokol never aborts.
+6. **Callbacks** (`src/callbacks.c`): sokol's audio thread never enters PHP. It posts the stream request, raises the owner's `EG(vm_interrupt)` and waits; the owner serves it from `zend_interrupt_function`. Not started within one buffer's duration → withdrawn, silence. Owner-thread log calls run inline; audio-thread logs are queued to the next interrupt or `saudio_shutdown()`. Shutdown sets `stopping` first so a waiting audio thread wakes to silence and sokol can join it.
+7. **Request end** shuts down a sokol-audio the request's thread set up and releases the held closures. `pthread_atfork` marks a live instance dead in the child.
+8. **The stub is the declaration.** Edit `stubs/sokol_audio.stub.php`, regenerate with `php84 /opt/homebrew/opt/php@8.4/lib/php/build/gen_stub.php stubs`, commit both. Never hand-edit `*_arginfo.h`.
+9. **Build.** `./install-macos.sh` into Homebrew `php@8.4` and `php@8.4-zts`. On the Pi, copy the tree with `fnk` (set `COPYFILE_DISABLE=1` on the Mac `tar` so no `._*` files reach gen_stub) and `./install-debian-trixie.sh` (installs `libpulse-dev`). Pest at `-d memory_limit=128M`, with `XDEBUG_MODE=off` for any timing. Gate a commit on the suite's exit code.
+10. **No audible sound.** Tests and checks write silence. Never play real audio on the maintainer's machine without asking first.
+11. **Durable facts go in `.okf`.** Update the matching concept and append `.okf/log.md`.
+12. **Version** is `PHP_SOKOL_AUDIO_VERSION` in `php_sokol_audio.h`: 0.11.0. `os-families`: linux, darwin.
