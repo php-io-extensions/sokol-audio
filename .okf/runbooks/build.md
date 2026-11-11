@@ -1,7 +1,7 @@
 ---
 type: Runbook
 title: Build, install, test
-description: Build ext-sokol-audio into Homebrew PHP 8.4 NTS/ZTS and on Linux, test a build without installing it, run the suite without audible sound.
+description: Build ext-sokol-audio into Homebrew PHP 8.4 NTS/ZTS and on Linux, the CI audio stack, test a build without installing it, run the suite without audible sound.
 resource: install-macos.sh
 tags: [sokol-audio, build, test]
 status: draft
@@ -28,11 +28,11 @@ The suite writes silence only. Never run code that plays real sound on the maint
 
 # Linux / Pi (Debian trixie)
 
-Needs `build-essential`, `php8.4-dev`, `libpulse-dev` (the installer installs it).[^debian] Copy to the Pi with `COPYFILE_DISABLE=1 tar --no-xattrs … | fnk …`, then `./install-debian-trixie.sh`. Verified on the fnk Pi 5 (PHP 8.4 ZTS under /usr/local/php84-zts, PipeWire pulse server, HDMI speaker; `composer` in /usr/local/bin): `cd ~/sokol-audio && php -d memory_limit=128M vendor/bin/pest`. Sound may be played there; there is a speaker. Device tests need a pulse server for the user (PipeWire's works); headless, `pulseaudio --start --exit-idle-time=-1` and `pactl load-module module-null-sink`.
+Needs `build-essential`, `php8.4-dev`, `libpulse-dev` (the installer installs it).[^debian] Copy to the Pi with `COPYFILE_DISABLE=1 tar --no-xattrs … | fnk …`, then `./install-debian-trixie.sh`. Verified on the fnk Pi 5 (PHP 8.4 ZTS under /usr/local/php84-zts, PipeWire pulse server, HDMI speaker; `composer` in /usr/local/bin): `cd ~/sokol-audio && php -d memory_limit=128M vendor/bin/pest`. Sound may be played there; there is a speaker. Device tests need a pulse server for the user (PipeWire's works); headless, `pulseaudio --start --exit-idle-time=-1` and `pactl load-module module-null-sink` under PipeWire, not PulseAudio (2 s blocks, see CI).
 
 # CI
 
-Ubuntu cells start PulseAudio with a null sink so the device tests run; a last step runs the audio-thread log test alone with `SAUDIO_TEST_KILL_PULSE=1` (it kills the server). macOS cells skip device tests if the runner has no output.[^ci]
+Ubuntu cells start PipeWire + WirePlumber + pipewire-pulse by hand (session dbus, `XDG_RUNTIME_DIR`, both exported through `GITHUB_ENV`) with a null sink, so the device tests run; a last step runs the audio-thread log test alone with `SAUDIO_TEST_KILL_PULSE=1` (it kills `pipewire-pulse`). Not PulseAudio's `module-null-sink`: sokol's `pa_simple_new` asks for no latency, so that sink stays at its 2 s maximum and each `pa_simple_write` blocks ~2 s (one stream callback per 2 s; 0.11.0's CI failed `StreamTest` on Ubuntu). Reproduce a Linux cell locally in `docker run ubuntu:24.04` with ondrej's php8.4 and the same bootstrap. macOS cells skip device tests if the runner has no output.[^ci]
 
 [^mac]: mac
 [^debian]: debian

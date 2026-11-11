@@ -11,4 +11,4 @@
 9. **Build.** `./install-macos.sh` into Homebrew `php@8.4` and `php@8.4-zts`. On the Pi, copy the tree with `fnk` (set `COPYFILE_DISABLE=1` on the Mac `tar` so no `._*` files reach gen_stub) and `./install-debian-trixie.sh` (installs `libpulse-dev`). Pest at `-d memory_limit=128M`, with `XDEBUG_MODE=off` for any timing. Gate a commit on the suite's exit code.
 10. **No audible sound.** Tests and checks write silence. Never play real audio on the maintainer's machine without asking first.
 11. **Durable facts go in `.okf`.** Update the matching concept and append `.okf/log.md`.
-12. **Version** is `PHP_SOKOL_AUDIO_VERSION` in `php_sokol_audio.h`: 0.11.0. `os-families`: linux, darwin.
+12. **Version** is `PHP_SOKOL_AUDIO_VERSION` in `php_sokol_audio.h`: 0.11.1. `os-families`: linux, darwin.

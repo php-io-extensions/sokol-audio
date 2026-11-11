@@ -1,5 +1,11 @@
 # Log
 
+## 2026-11-11 (0.11.1)
+
+* **Version** 0.11.1. No binding change.
+* **CI**: Ubuntu cells run PipeWire's pulse server with a null sink instead of PulseAudio's. 0.11.0's Ubuntu cells failed two `StreamTest` cases: sokol's stream requests no latency, PulseAudio's null sink rendered 2 s blocks, one callback per 2 s. Reproduced and fixed in `ubuntu:24.04` under Docker: 51 passed, 1 skipped, then the audio-thread log test passed.
+* **LoggerTest**: the audio-thread log test restarts `pipewire-pulse` under systemd, else kills it, else kills PulseAudio (no systemd user session in CI). Passes on the Pi and in the container.
+
 ## 2026-11-11
 
 * **StreamTest**: the exception and bad-buffer tests set up inside the expectation. PulseAudio requests the first buffer as soon as `saudio_setup()` returns (CoreAudio waits out two primed buffers), so the callback could be served, and throw, before the old `expect(fn () => spin)`. **LoggerTest**: the audio-thread log test restarts `pipewire-pulse` where `pulseaudio` is absent.

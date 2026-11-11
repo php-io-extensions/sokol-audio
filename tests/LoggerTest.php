@@ -32,8 +32,7 @@ it('rethrows a logger exception when saudio_setup() returns, with sokol-audio se
 
 /*
  * The audio thread logs only PULSEAUDIO_SIMPLE_WRITE_FAILED (Linux) and AAudio restarts (Android).
- * Run it alone with SAUDIO_TEST_KILL_PULSE=1: it kills the PulseAudio server (CI's last step) or restarts
- * PipeWire's pulse server.
+ * Run it alone with SAUDIO_TEST_KILL_PULSE=1: it restarts or kills the pulse server (CI's last step).
  */
 it('delivers an audio thread log at the next interrupt point', function (): void {
     if (PHP_OS_FAMILY !== 'Linux' || getenv('SAUDIO_TEST_KILL_PULSE') !== '1') {
@@ -44,8 +43,8 @@ it('delivers an audio thread log at the next interrupt point', function (): void
         $logs[] = $args;
     })));
 
-    /* Drop the client connection: PulseAudio is killed, PipeWire's pulse server restarts. */
-    exec('command -v pulseaudio >/dev/null && pulseaudio --kill || systemctl --user restart pipewire-pulse.service');
+    /* Drop the client connection: restart PipeWire's pulse server under systemd, else kill it, else kill PulseAudio. */
+    exec('systemctl --user restart pipewire-pulse.service 2>/dev/null || pkill -x pipewire-pulse || pulseaudio --kill');
     saudio_test_spin(2.0);
 
     expect(array_column($logs, 2))->toContain(SAUDIO_LOGITEM_PULSEAUDIO_SIMPLE_WRITE_FAILED);

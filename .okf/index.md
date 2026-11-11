@@ -4,7 +4,7 @@ okf_version: "0.2"
 
 # ext-sokol-audio
 
-1:1 PHP bindings of sokol_audio.h at floooh/sokol `93aa187b5d387cc24b7290b3ca3f13f61e139e7c` (vendored, unchanged). Version 0.11.0. Linux (PulseAudio), macOS (CoreAudio). PHP 8.4 NTS + ZTS.
+1:1 PHP bindings of sokol_audio.h at floooh/sokol `93aa187b5d387cc24b7290b3ca3f13f61e139e7c` (vendored, unchanged). Version 0.11.1. Linux (PulseAudio), macOS (CoreAudio). PHP 8.4 NTS + ZTS.
 
 # API
 
@@ -17,4 +17,4 @@ okf_version: "0.2"
 
 # Runbooks
 
-* [Build, install, test](runbooks/build.md) — Mac NTS/ZTS, scratch builds, Linux/Pi, CI null sink.
+* [Build, install, test](runbooks/build.md) — Mac NTS/ZTS, scratch builds, Linux/Pi, CI on PipeWire.

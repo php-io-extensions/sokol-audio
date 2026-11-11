@@ -149,7 +149,7 @@ $ php --ri sokol_audio
 sokol_audio
 
 sokol_audio support => enabled
-Version => 0.11.0
+Version => 0.11.1
 sokol commit => 93aa187b5d387cc24b7290b3ca3f13f61e139e7c
 Backend => CoreAudio
 ```
@@ -224,7 +224,7 @@ Start at [`.okf/index.md`](.okf/index.md). [`AGENTS.md`](AGENTS.md) is the short
 
 ## Running the test suite
 
-The suite is Pest v4: the struct classes and constants, every guard, the push model, the stream callbacks served from a PHP loop (silence on a missed deadline, exceptions and bad buffers rethrown), the logger, and a lifecycle test that spawns child PHP processes to check request end and `fork()`. Tests that need an output device skip where `saudio_isvalid()` is false; on a headless Linux box, start a PulseAudio server with a null sink (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)). The tests write silence; nothing is audible. Build the module, then enable it through an ini scan directory rather than `-d`, so the child processes load it too:
+The suite is Pest v4: the struct classes and constants, every guard, the push model, the stream callbacks served from a PHP loop (silence on a missed deadline, exceptions and bad buffers rethrown), the logger, and a lifecycle test that spawns child PHP processes to check request end and `fork()`. Tests that need an output device skip where `saudio_isvalid()` is false; on a headless Linux box, start PipeWire's pulse server with a null sink (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml); PulseAudio's own null sink renders 2-second blocks for sokol's stream and the callback tests fail). The tests write silence; nothing is audible. Build the module, then enable it through an ini scan directory rather than `-d`, so the child processes load it too:
 
 ```bash
 git clone https://github.com/php-io-extensions/sokol-audio.git
@@ -239,7 +239,7 @@ PHP_INI_SCAN_DIR=":/tmp/sokol-audio-ini" php -d memory_limit=128M vendor/bin/pes
 Tests:    1 skipped, 51 passed (266 assertions)
 ```
 
-The skipped test drops the client's pulse connection to make the audio thread log: it kills PulseAudio, or restarts PipeWire's `pipewire-pulse`. It runs only on Linux with `SAUDIO_TEST_KILL_PULSE=1` (`--filter 'audio thread log'`), as CI's last step. The leading `:` keeps your PHP's own scan directory and adds the second one. If that PHP already loads an installed `sokol_audio.so`, the suite tests the installed one instead; point `PHP_INI_SCAN_DIR` at a copy of the scan directory with its sokol_audio ini replaced. A module only loads in the PHP whose `phpize` built it: for Homebrew's ZTS build, run `phpize` and pass `--with-php-config` from `/opt/homebrew/opt/php@8.4-zts/bin`.
+The skipped test drops the client's pulse connection to make the audio thread log: it restarts or kills `pipewire-pulse`, or kills PulseAudio. It runs only on Linux with `SAUDIO_TEST_KILL_PULSE=1` (`--filter 'audio thread log'`), as CI's last step. The leading `:` keeps your PHP's own scan directory and adds the second one. If that PHP already loads an installed `sokol_audio.so`, the suite tests the installed one instead; point `PHP_INI_SCAN_DIR` at a copy of the scan directory with its sokol_audio ini replaced. A module only loads in the PHP whose `phpize` built it: for Homebrew's ZTS build, run `phpize` and pass `--with-php-config` from `/opt/homebrew/opt/php@8.4-zts/bin`.
 
 ## Contributing
 
