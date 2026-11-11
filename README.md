@@ -239,7 +239,7 @@ PHP_INI_SCAN_DIR=":/tmp/sokol-audio-ini" php -d memory_limit=128M vendor/bin/pes
 Tests:    1 skipped, 51 passed (266 assertions)
 ```
 
-The skipped test drops the client's pulse connection to make the audio thread log: it restarts or kills `pipewire-pulse`, or kills PulseAudio. It runs only on Linux with `SAUDIO_TEST_KILL_PULSE=1` (`--filter 'audio thread log'`), as CI's last step. The leading `:` keeps your PHP's own scan directory and adds the second one. If that PHP already loads an installed `sokol_audio.so`, the suite tests the installed one instead; point `PHP_INI_SCAN_DIR` at a copy of the scan directory with its sokol_audio ini replaced. A module only loads in the PHP whose `phpize` built it: for Homebrew's ZTS build, run `phpize` and pass `--with-php-config` from `/opt/homebrew/opt/php@8.4-zts/bin`.
+The skipped test drops the client's pulse connection to make the audio thread log: it kills `pipewire-pulse` (systemd's socket activation restarts it), or PulseAudio. It runs only on Linux with `SAUDIO_TEST_KILL_PULSE=1` (`--filter 'audio thread log'`), as CI's last step. The leading `:` keeps your PHP's own scan directory and adds the second one. If that PHP already loads an installed `sokol_audio.so`, the suite tests the installed one instead; point `PHP_INI_SCAN_DIR` at a copy of the scan directory with its sokol_audio ini replaced. A module only loads in the PHP whose `phpize` built it: for Homebrew's ZTS build, run `phpize` and pass `--with-php-config` from `/opt/homebrew/opt/php@8.4-zts/bin`.
 
 ## Contributing
 

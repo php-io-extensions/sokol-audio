@@ -4,7 +4,7 @@
 
 * **Version** 0.11.1. No binding change.
 * **CI**: Ubuntu cells run PipeWire's pulse server with a null sink instead of PulseAudio's. 0.11.0's Ubuntu cells failed two `StreamTest` cases: sokol's stream requests no latency, PulseAudio's null sink rendered 2 s blocks, one callback per 2 s. Reproduced and fixed in `ubuntu:24.04` under Docker: 51 passed, 1 skipped, then the audio-thread log test passed.
-* **LoggerTest**: the audio-thread log test restarts `pipewire-pulse` under systemd, else kills it, else kills PulseAudio (no systemd user session in CI). Passes on the Pi and in the container.
+* **LoggerTest**: the audio-thread log test kills every `pipewire-pulse` (else PulseAudio). A first cut ran `systemctl --user restart pipewire-pulse.service` first: GitHub's runner has a systemd user session and the package's user units, so that started a second server and sokol's connection stayed up (CI run 43094140349). Socket activation restarts the server on the Pi.
 
 ## 2026-11-11
 

@@ -43,8 +43,12 @@ it('delivers an audio thread log at the next interrupt point', function (): void
         $logs[] = $args;
     })));
 
-    /* Drop the client connection: restart PipeWire's pulse server under systemd, else kill it, else kill PulseAudio. */
-    exec('systemctl --user restart pipewire-pulse.service 2>/dev/null || pkill -x pipewire-pulse || pulseaudio --kill');
+    /*
+     * Drop the client connection by killing every pipewire-pulse (else PulseAudio). Not systemctl restart: where
+     * systemd has the unit but the server was started by hand (GitHub's runner), that starts a second server and
+     * leaves sokol's connection up. Under systemd, socket activation brings the server back.
+     */
+    exec('pkill -x pipewire-pulse || pulseaudio --kill');
     saudio_test_spin(2.0);
 
     expect(array_column($logs, 2))->toContain(SAUDIO_LOGITEM_PULSEAUDIO_SIMPLE_WRITE_FAILED);
